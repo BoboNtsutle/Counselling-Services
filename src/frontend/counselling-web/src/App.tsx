@@ -1,4 +1,5 @@
-import { FormEvent, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
 import './App.css'
 
 type UserRole = 'Student' | 'Counsellor' | 'Admin'
@@ -49,7 +50,10 @@ function App() {
     [counsellors],
   )
 
-  const authHeader = token ? { Authorization: ['Bearer', token].join(' ') } : {}
+  const authHeaders = new Headers()
+  if (token) {
+    authHeaders.set('Authorization', ['Bearer', token].join(' '))
+  }
 
   async function register(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -110,7 +114,7 @@ function App() {
     const response = await fetch(`${apiBaseUrl}/api/appointments`, {
       method: 'POST',
       headers: {
-        ...authHeader,
+        Authorization: authHeaders.get('Authorization') ?? '',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ slotId: selectedSlot, reason }),
@@ -133,7 +137,7 @@ function App() {
 
     const response = await fetch(`${apiBaseUrl}/api/appointments/me`, {
       headers: {
-        ...authHeader,
+        Authorization: authHeaders.get('Authorization') ?? '',
       },
     })
 
