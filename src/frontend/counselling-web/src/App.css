@@ -1,0 +1,68 @@
+.app {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #0f172a;
+}
+
+header h1 {
+  margin-bottom: 0.5rem;
+}
+
+header p {
+  margin-top: 0;
+  color: #475569;
+}
+
+.card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+  background: #fff;
+}
+
+form,
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+input,
+select,
+textarea,
+button {
+  padding: 0.65rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font: inherit;
+}
+
+textarea {
+  min-height: 85px;
+}
+
+button {
+  background: #0f766e;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+ul {
+  padding-left: 1rem;
+}
+
+.message {
+  margin-top: 1rem;
+  color: #0f766e;
+  font-weight: 600;
+}

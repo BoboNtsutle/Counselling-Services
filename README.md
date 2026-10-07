@@ -21,4 +21,19 @@ BBL Ntsutle (Student ID: 224085810)
 T Mofokeng (Student ID: 224079447)  
 
 Current Project Stage
-Phase 1: Planning, Requirements, and Feasibility
+Phase 3: Minimal Scalable MVP Baseline
+
+MVP Implementation
+- Architecture and implementation summary: [Documentation/MVP_Architecture_and_Implementation.md](Documentation/MVP_Architecture_and_Implementation.md)
+- Backend API: `/src/backend/CounsellingServices.Api`
+- Frontend web app: `/src/frontend/counselling-web`
+
+Quick Start
+- Backend
+  - `cd /home/runner/work/Counselling-Services/Counselling-Services/src/backend/CounsellingServices.Api`
+  - Update `appsettings.json` database connection string and JWT key
+  - `dotnet run`
+- Frontend
+  - `cd /home/runner/work/Counselling-Services/Counselling-Services/src/frontend/counselling-web`
+  - `npm install`
+  - `npm run dev`
