@@ -1,0 +1,52 @@
+@model List<Appointment>
+@{
+    ViewData["Title"] = "Dashboard";
+    var counts = (DashboardCounts)ViewBag.Counts;
+}
+@* MODULE 6 — Admin dashboard *@
+<div class="page-head">
+    <div>
+        <h1>Good day, @User.Identity?.Name</h1>
+        <p>Here's what needs attention at the Wellness Centre.</p>
+    </div>
+    <a asp-controller="Appointments" asp-action="Index" asp-route-status="Pending" class="btn-ancora">Review requests</a>
+</div>
+
+<div class="stats">
+    <div class="stat accent"><div class="label">Pending requests</div><div class="value">@counts.Pending</div></div>
+    <div class="stat"><div class="label">Approved (upcoming)</div><div class="value @(counts.Approved == 0 ? "todo" : "")">@counts.Approved</div></div>
+    <div class="stat"><div class="label">Completed this month</div><div class="value @(counts.CompletedThisMonth == 0 ? "todo" : "")">@counts.CompletedThisMonth</div></div>
+    <div class="stat"><div class="label">Staff role requests</div><div class="value @(counts.PendingRoleRequests == 0 ? "todo" : "")">@counts.PendingRoleRequests</div></div>
+</div>
+
+<div class="card-a">
+    <h2>Latest pending requests</h2>
+    @if (Model.Count == 0)
+    {
+        <div class="empty">No pending requests. 🎉</div>
+    }
+    else
+    {
+        <div class="table-wrap">
+        <table class="table-a">
+            <thead><tr><th>Student</th><th>Requested</th><th>Reason</th><th>Urgency</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td><strong>@a.StudentName</strong><br /><span class="text-muted small">@a.StudentNumber</span></td>
+                    <td>@a.AppointmentDate · @a.AppointmentTime</td>
+                    <td>@a.Reason</td>
+                    <td><span class="badge-a badge-@a.Urgency">@a.Urgency</span></td>
+                    <td class="text-end"><a asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id">Open</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+    }
+</div>
+
+<div class="card-a">
+    <!-- Dashboard TODO removed from UI; ReportService should supply counts -->
+</div>

@@ -1,0 +1,177 @@
+@model StudentRecordViewModel
+@{
+    // Shared by the Admin and Psychologist areas. Only psychologists can add / edit entries.
+    ViewData["Title"] = Model.Student.DisplayName;
+    var s = Model.Student;
+    var canWrite = User.IsInRole(Roles.Psychologist);
+    var meId = canWrite ? User.GetUserId() : Guid.Empty;
+}
+
+<div class="page-head">
+    <div><h1>@s.DisplayName</h1><p>Student record@(string.IsNullOrEmpty(s.StudentNumber) ? "" : " · " + s.StudentNumber)</p></div>
+    <a asp-action="Index" class="btn-ghost">← All students</a>
+</div>
+
+<div class="stats">
+    <div class="stat accent"><div class="label">Appointments</div><div class="value">@Model.Appointments.Count</div></div>
+    <div class="stat"><div class="label">Completed</div><div class="value">@Model.Appointments.Count(a => a.Status == AppointmentStatus.Complete)</div></div>
+    <div class="stat"><div class="label">Waiting / approved</div><div class="value">@Model.Appointments.Count(a => a.Status == AppointmentStatus.Pending || a.Status == AppointmentStatus.Approved)</div></div>
+    <div class="stat"><div class="label">Saved records</div><div class="value">@Model.Entries.Count</div></div>
+</div>
+
+<div class="card-a">
+    <h2>Details</h2>
+    <dl class="dl-a">
+        <dt>Name</dt><dd>@s.DisplayName</dd>
+        <dt>Student number</dt><dd>@(string.IsNullOrEmpty(s.StudentNumber) ? "—" : s.StudentNumber)</dd>
+        <dt>Course</dt><dd>@(string.IsNullOrEmpty(s.Course) ? "—" : s.Course)</dd>
+        <dt>Email</dt><dd>@(string.IsNullOrEmpty(s.Email) ? "—" : s.Email)</dd>
+        <dt>Phone</dt><dd>@(string.IsNullOrEmpty(s.PhoneNumber) ? "—" : s.PhoneNumber)</dd>
+        <dt>Registered</dt><dd>@(Model.HasProfile ? s.CreatedAt.LocalDateTime.ToString("d MMM yyyy") : "No student profile yet (details taken from their bookings)")</dd>
+    </dl>
+</div>
+
+@* ---------- Saved record entries (permanent) ---------- *@
+<div class="card-a">
+    <h2>Record entries</h2>
+    <p class="text-muted small">Everything saved here stays on the student's file. Entries can be edited by their author but are never deleted.</p>
+
+    @if (Model.RecordsTableMissing)
+    {
+        <div class="flash flash-err">
+            The saved-records table is not set up yet. Run <code>supabase/student_records.sql</code> once in the Supabase SQL Editor, then reload this page.
+        </div>
+    }
+    else if (canWrite)
+    {
+        <form asp-action="AddEntry" asp-route-id="@s.Id" method="post" class="record-form mb-3">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <label class="form-label" for="category">Type</label>
+                    <select id="category" name="category" class="form-select">
+                        @foreach (var c in StudentRecordCategories.All) { <option value="@c">@c</option> }
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label" for="title">Title</label>
+                    <input id="title" name="title" class="form-control" maxlength="150" placeholder="e.g. Initial assessment" required />
+                </div>
+                @if (Model.Appointments.Count > 0)
+                {
+                    <div class="col-12">
+                        <label class="form-label" for="appointmentId">Related session (optional)</label>
+                        <select id="appointmentId" name="appointmentId" class="form-select">
+                            <option value="">Not linked to a session</option>
+                            @foreach (var a in Model.Appointments)
+                            {
+                                <option value="@a.Id">@a.AppointmentDate @a.AppointmentTime — @a.Reason</option>
+                            }
+                        </select>
+                    </div>
+                }
+                <div class="col-12">
+                    <label class="form-label" for="notes">Notes</label>
+                    <textarea id="notes" name="notes" class="form-control" rows="5" maxlength="8000" placeholder="Write the record here…" required></textarea>
+                </div>
+                <div class="col-12"><button type="submit" class="btn-ancora">Save to record</button></div>
+            </div>
+        </form>
+    }
+
+    @if (Model.Entries.Count == 0 && !Model.RecordsTableMissing)
+    {
+        <div class="empty">Nothing has been saved on this student's record yet.</div>
+    }
+    @foreach (var e in Model.Entries)
+    {
+        var linked = e.AppointmentId.HasValue ? Model.Appointments.FirstOrDefault(a => a.Id == e.AppointmentId.Value) : null;
+        <div class="record-entry">
+            <div class="record-entry-head">
+                <div>
+                    <span class="badge-a badge-Approved">@e.Category</span>
+                    <strong class="ms-1">@e.Title</strong>
+                </div>
+                <span class="text-muted small">
+                    @e.CreatedAt.LocalDateTime.ToString("d MMM yyyy, HH:mm") · @(string.IsNullOrWhiteSpace(e.AuthorName) ? "Psychologist" : e.AuthorName)
+                    @if (e.WasEdited) { <text> · edited @e.UpdatedAt.LocalDateTime.ToString("d MMM yyyy, HH:mm")</text> }
+                </span>
+            </div>
+            @if (linked != null) { <div class="text-muted small mb-1">Session: @linked.AppointmentDate @linked.AppointmentTime</div> }
+            <div class="record-entry-body">@e.Notes</div>
+
+            @if (canWrite && e.AuthorId == meId)
+            {
+                <details class="mt-2">
+                    <summary class="small">Edit entry</summary>
+                    <form asp-action="EditEntry" asp-route-id="@s.Id" method="post" class="record-form mt-2">
+                        <input type="hidden" name="entryId" value="@e.Id" />
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <select name="category" class="form-select">
+                                    @foreach (var c in StudentRecordCategories.All) { <option value="@c" selected="@(c == e.Category)">@c</option> }
+                                </select>
+                            </div>
+                            <div class="col-md-8"><input name="title" class="form-control" maxlength="150" value="@e.Title" required /></div>
+                            <div class="col-12"><textarea name="notes" class="form-control" rows="5" maxlength="8000" required>@e.Notes</textarea></div>
+                            <div class="col-12"><button type="submit" class="btn-ghost">Save changes</button></div>
+                        </div>
+                    </form>
+                </details>
+            }
+        </div>
+    }
+</div>
+
+@* ---------- Appointment history ---------- *@
+<div class="card-a">
+    <h2>Appointment history</h2>
+    @if (Model.Appointments.Count == 0)
+    {
+        <div class="empty">This student has not booked any sessions yet.</div>
+    }
+    else
+    {
+        <div class="table-wrap">
+        <table class="table-a">
+            <thead><tr><th>Date &amp; time</th><th>Psychologist</th><th>Reason</th><th>Mood</th><th>Urgency</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var a in Model.Appointments)
+            {
+                <tr>
+                    <td>@a.AppointmentDate<br /><span class="text-muted small">@a.AppointmentTime</span></td>
+                    <td>@(string.IsNullOrEmpty(a.PsychologistName) ? "—" : a.PsychologistName)</td>
+                    <td>@a.Reason</td>
+                    <td>@(string.IsNullOrEmpty(a.Mood) ? "—" : a.Mood)</td>
+                    <td><span class="badge-a badge-@a.Urgency">@a.Urgency</span></td>
+                    <td><partial name="_StatusBadge" model="a.Status" /></td>
+                    <td class="text-end">
+                        @if (canWrite && a.PsychologistId == meId)
+                        {
+                            <a asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id">Open</a>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+    }
+</div>
+
+@* ---------- Session notes you are allowed to read ---------- *@
+@if (Model.SessionNotes.Count > 0)
+{
+    <div class="card-a">
+        <h2>Session notes</h2>
+        @foreach (var a in Model.Appointments.Where(a => Model.SessionNotes.ContainsKey(a.Id)))
+        {
+            <div class="record-entry">
+                <div class="record-entry-head">
+                    <strong>@a.AppointmentDate @a.AppointmentTime</strong>
+                    <span class="text-muted small">@(string.IsNullOrEmpty(a.PsychologistName) ? "" : a.PsychologistName)</span>
+                </div>
+                <div class="record-entry-body">@Model.SessionNotes[a.Id]</div>
+            </div>
+        }
+    </div>
+}

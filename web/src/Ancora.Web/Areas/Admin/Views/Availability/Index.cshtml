@@ -1,0 +1,93 @@
+@model Ancora.Web.Models.Admin.AvailabilityViewModel
+@{
+    ViewData["Title"] = "Availability";
+
+    var first = new DateTime(Model.Year, Model.Month, 1);
+    var prev = first.AddMonths(-1);
+    var next = first.AddMonths(1);
+    var pid = Model.Selected?.Id;
+
+    // The calendar starts on the Monday of the week that contains the 1st.
+    // (If the 1st is a weekend, start on the following Monday so there is no empty first row.)
+    var cursor = first.AddDays(-(((int)first.DayOfWeek + 6) % 7));
+    if (!WorkingHours.IsWorkingDay(first)) cursor = cursor.AddDays(7);
+    var last = first.AddMonths(1).AddDays(-1);
+    var dayNames = new[] { "Mon", "Tue", "Wed", "Thu", "Fri" };
+}
+
+<div class="page-head">
+    <div><h1>Psychologist availability</h1><p>Monday to Friday, @WorkingHours.Slots.First() to @((WorkingHours.LastHour + 1).ToString("00")):00 · one-hour sessions</p></div>
+</div>
+
+<div class="card-a">
+    @if (Model.Selected == null)
+    {
+        <div class="empty">There are no psychologists yet.</div>
+    }
+    else
+    {
+        @* Choose a psychologist (the page reloads) and move between months. *@
+        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
+            <form method="get" class="d-flex gap-2 align-items-center">
+                <input type="hidden" name="year" value="@Model.Year" />
+                <input type="hidden" name="month" value="@Model.Month" />
+                <select name="psychologistId" class="form-select" style="width:auto" onchange="this.form.submit()">
+                    @foreach (var p in Model.Psychologists)
+                    {
+                        <option value="@p.Id" selected="@(p.Id == pid)">@p.DisplayName</option>
+                    }
+                </select>
+            </form>
+            <div class="d-flex gap-2 align-items-center">
+                <a asp-action="Index" asp-route-year="@prev.Year" asp-route-month="@prev.Month" asp-route-psychologistId="@pid" class="btn-ghost">←</a>
+                <strong style="min-width:9em;text-align:center">@first.ToString("MMMM yyyy")</strong>
+                <a asp-action="Index" asp-route-year="@next.Year" asp-route-month="@next.Month" asp-route-psychologistId="@pid" class="btn-ghost">→</a>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+        <table class="table-a cal">
+            <thead><tr>@foreach (var d in dayNames) { <th>@d</th> }</tr></thead>
+            <tbody>
+            @while (cursor <= last)
+            {
+                <tr>
+                @for (int col = 0; col < 5; col++)
+                {
+                    var day = cursor.AddDays(col);
+                    if (day.Month != Model.Month)
+                    {
+                        <td class="cal-off"></td>
+                        continue;
+                    }
+
+                    Model.Booked.TryGetValue(day.Date, out var booked);
+                    <td>
+                        <div class="cal-day">@day.Day</div>
+                        @foreach (var slot in WorkingHours.Slots)
+                        {
+                            if (booked != null && booked.TryGetValue(slot, out var appt))
+                            {
+                                @* Booked: click to open the appointment. *@
+                                <a asp-controller="Appointments" asp-action="Details" asp-route-id="@appt.Id"
+                                   class="cal-slot slot-booked" title="@appt.StudentName">@slot Booked</a>
+                            }
+                            else
+                            {
+                                <span class="cal-slot slot-free">@slot Free</span>
+                            }
+                        }
+                    </td>
+                }
+                </tr>
+                cursor = cursor.AddDays(7);
+            }
+            </tbody>
+        </table>
+        </div>
+        <p class="text-muted small mt-3 mb-0">
+            <span class="badge-a slot-free">Free</span> no approved appointment &nbsp;
+            <span class="badge-a slot-booked">Booked</span> approved appointment (hover to see the student, click to open it)
+        </p>
+    }
+</div>

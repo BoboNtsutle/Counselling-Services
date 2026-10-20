@@ -1,0 +1,88 @@
+@model StudentDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+
+    // Friendly greeting that depends on the time of day.
+    var hour = DateTime.Now.Hour;
+    var greeting = hour < 12 ? "Good morning" : (hour < 18 ? "Good afternoon" : "Good evening");
+    var firstName = (Model.Profile?.DisplayName ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+}
+
+<div class="page-head">
+    <div>
+        <h1>@(greeting + (string.IsNullOrEmpty(firstName) ? "" : ", " + firstName))</h1>
+        <p>Your sessions and the latest news from the Wellness Centre.</p>
+    </div>
+    <a asp-area="Student" asp-controller="Bookings" asp-action="Index" class="btn-ancora">Book a session</a>
+</div>
+
+@* ---------- Quick numbers ---------- *@
+<div class="stats">
+    <div class="stat accent"><div class="label">Current appointments</div><div class="value">@Model.Upcoming.Count</div></div>
+    <div class="stat"><div class="label">Approved</div><div class="value">@Model.Upcoming.Count(a => a.Status == AppointmentStatus.Approved)</div></div>
+    <div class="stat"><div class="label">Waiting for approval</div><div class="value">@Model.Upcoming.Count(a => a.Status == AppointmentStatus.Pending)</div></div>
+</div>
+
+<div class="row g-3">
+    @* ---------- Left: current appointments ---------- *@
+    <div class="col-lg-7">
+        <div class="card-a">
+            <h2>My current appointments</h2>
+            @if (Model.Upcoming.Count == 0)
+            {
+                <div class="empty">
+                    You have no current appointments.<br />
+                    <a asp-area="Student" asp-controller="Bookings" asp-action="Index">Book your first session</a>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                <table class="table-a">
+                    <thead><tr><th>When</th><th>Psychologist</th><th>Status</th></tr></thead>
+                    <tbody>
+                    @foreach (var a in Model.Upcoming)
+                    {
+                        <tr>
+                            <td><strong>@a.AppointmentDate</strong><br /><span class="text-muted small">@a.AppointmentTime</span></td>
+                            <td>@(string.IsNullOrEmpty(a.PsychologistName) ? "Will be assigned" : a.PsychologistName)</td>
+                            <td><partial name="_StatusBadge" model="a.Status" /></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+                </div>
+                <p class="mt-3 mb-0"><a asp-area="Student" asp-controller="Appointments" asp-action="Index">Manage or cancel appointments →</a></p>
+            }
+        </div>
+    </div>
+
+    @* ---------- Right: latest news ---------- *@
+    <div class="col-lg-5">
+        <div class="card-a">
+            <h2>Latest news</h2>
+            @if (Model.News.Count == 0)
+            {
+                <div class="empty">Nothing has been published yet.</div>
+            }
+            else
+            {
+                @foreach (var n in Model.News)
+                {
+                    <div class="d-flex gap-3 align-items-start mb-3">
+                        @if (!string.IsNullOrEmpty(n.ImageUrl))
+                        {
+                            <div class="media-thumb"><img src="@n.ImageUrl" alt="" class="media-thumb-img" /></div>
+                        }
+                        <div>
+                            <h3 class="h6 mb-1">@n.Title</h3>
+                            <div class="text-muted small mb-1">@n.CreatedAt.LocalDateTime.ToString("d MMM yyyy")</div>
+                            <div class="small">@n.Message</div>
+                        </div>
+                    </div>
+                }
+                <a asp-area="" asp-controller="Announcements" asp-action="Index">All news →</a>
+            }
+        </div>
+    </div>
+</div>

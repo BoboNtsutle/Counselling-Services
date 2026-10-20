@@ -1,0 +1,50 @@
+@model List<Appointment>
+@{
+    ViewData["Title"] = "Appointments";
+    var current = (string?)ViewBag.Status;
+}
+@* MODULE 2 — Admin appointments list *@
+<div class="page-head">
+    <div><h1>Appointments</h1><p>Every request made from the student app.</p></div>
+</div>
+
+<div class="filters">
+    <a class="chip @(string.IsNullOrEmpty(current) ? "active" : "")" asp-action="Index">All</a>
+    @foreach (var s in AppointmentStatus.All)
+    {
+        <a class="chip @(s == current ? "active" : "")" asp-action="Index" asp-route-status="@s">@s</a>
+    }
+</div>
+
+<div class="card-a">
+    @if (Model.Count == 0)
+    {
+        <div class="empty">No appointments here yet.</div>
+    }
+    else
+    {
+        <div class="table-wrap">
+        <table class="table-a">
+            <thead><tr><th>Student</th><th>Date &amp; time</th><th>Reason</th><th>Urgency</th><th>Psychologist</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td><strong>@a.StudentName</strong><br /><span class="text-muted small">@a.StudentNumber · @a.Course</span></td>
+                    <td>@a.AppointmentDate<br /><span class="text-muted small">@a.AppointmentTime</span></td>
+                    <td>@a.Reason</td>
+                    <td><span class="badge-a badge-@a.Urgency">@a.Urgency</span></td>
+                    <td>@(string.IsNullOrEmpty(a.PsychologistName) ? "—" : a.PsychologistName)</td>
+                    <td><partial name="_StatusBadge" model="a.Status" /></td>
+                    <td class="text-end"><a asp-action="Details" asp-route-id="@a.Id">Open</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+    }
+</div>
+
+<div class="card-a">
+    <!-- Module 2 TODOs removed from UI -->
+</div>

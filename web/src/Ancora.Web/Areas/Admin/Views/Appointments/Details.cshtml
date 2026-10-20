@@ -1,0 +1,76 @@
+@model Appointment
+@{
+    ViewData["Title"] = "Appointment";
+    var psychologists = (List<Profile>)ViewBag.Psychologists;
+}
+@* MODULE 2 — Admin appointment details *@
+<div class="page-head">
+    <div><h1>@Model.StudentName</h1><p>Request made @Model.CreatedAt.LocalDateTime.ToString("d MMM yyyy, HH:mm")</p></div>
+    <a asp-action="Index" class="btn-ghost">← All appointments</a>
+</div>
+
+<div class="card-a">
+    <dl class="dl-a">
+        <dt>Status</dt><dd><partial name="_StatusBadge" model="Model.Status" /></dd>
+        <dt>Student number</dt><dd>@Model.StudentNumber</dd>
+        <dt>Course</dt><dd>@Model.Course</dd>
+        <dt>Requested slot</dt><dd>@Model.AppointmentDate at @Model.AppointmentTime</dd>
+        <dt>Reason</dt><dd>@Model.Reason</dd>
+        <dt>Mood</dt><dd>@Model.Mood</dd>
+        <dt>Urgency</dt><dd><span class="badge-a badge-@Model.Urgency">@Model.Urgency</span></dd>
+        <dt>Psychologist</dt><dd>@(string.IsNullOrEmpty(Model.PsychologistName) ? "Not assigned" : Model.PsychologistName)</dd>
+    </dl>
+</div>
+
+<div class="card-a">
+    <h2>Actions</h2>
+    <p class="text-muted small">Psychologists on the team: @psychologists.Count · <a asp-controller="Availability" asp-action="Index">Check who is free</a></p>
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="Approve" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="mb-2">
+                    <label class="form-label">Assign to</label>
+                    <select name="psychologistId" class="form-select">
+                        @foreach (var p in psychologists)
+                        {
+                            <option value="@p.Id">@p.DisplayName</option>
+                        }
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success">Approve &amp; Assign</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <form asp-action="Reject" method="post" onsubmit="return confirm('Reject this appointment?');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="btn btn-danger">Reject</button>
+            </form>
+        </div>
+    </div>
+
+    <hr />
+    <form asp-action="Reschedule" method="post" class="row g-2">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <div class="col-auto">
+            <label class="form-label">New date</label>
+            <input type="date" name="newDate" class="form-control" />
+        </div>
+        <div class="col-auto">
+            <label class="form-label">New time</label>
+            <select name="newTime" class="form-select" required>
+                <option value="">Choose…</option>
+                @foreach (var slot in WorkingHours.Slots)
+                {
+                    <option value="@slot">@slot</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto align-self-end">
+            <button type="submit" class="btn btn-primary">Reschedule</button>
+        </div>
+    </form>
+</div>
