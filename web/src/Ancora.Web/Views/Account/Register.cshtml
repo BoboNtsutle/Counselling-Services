@@ -1,0 +1,45 @@
+@model Ancora.Web.Models.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+    Layout = "_AuthLayout";
+}
+
+<h2>Create an account</h2>
+<p class="sub">Register an Ancora account. Psychologists: choose "Psychologist" to request staff access; an admin will approve your request.</p>
+
+<form asp-action="Register" method="post" novalidate>
+    <div asp-validation-summary="ModelOnly" class="flash flash-err" role="alert"></div>
+    <div class="mb-3">
+        <label asp-for="DisplayName" class="form-label"></label>
+        <input asp-for="DisplayName" class="form-control" />
+        <span asp-validation-for="DisplayName" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label"></label>
+        <input asp-for="Password" class="form-control" />
+        <span asp-validation-for="Password" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="RequestedRole" class="form-label">Register as</label>
+        <select asp-for="RequestedRole" class="form-select">
+            <option value="psychologist">Psychologist</option>
+            <option value="student">Student</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label asp-for="StudentNumber" class="form-label"></label>
+        <input asp-for="StudentNumber" class="form-control" />
+    </div>
+    <div class="mb-4">
+        <label asp-for="PhoneNumber" class="form-label"></label>
+        <input asp-for="PhoneNumber" class="form-control" />
+    </div>
+    <button type="submit" class="btn-ancora w-100">Register</button>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

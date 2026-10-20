@@ -1,0 +1,110 @@
+@model BookSessionViewModel
+@{
+    ViewData["Title"] = "Book a session";
+    var today = DateTime.Today.ToString("yyyy-MM-dd");      // earliest date the student may pick
+    var closing = (WorkingHours.LastHour + 1).ToString("00") + ":00";
+}
+
+<div class="page-head">
+    <div><h1>Book a session</h1><p>Tell us when suits you and what you would like to talk about. The centre will confirm your request.</p></div>
+</div>
+
+<form asp-area="Student" asp-controller="Bookings" asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="flash flash-err"></div>
+
+    <div class="row g-3">
+        @* ---------- Step 1: date and time ---------- *@
+        <div class="col-lg-6">
+            <div class="card-a">
+                <h2>1. Pick a date and time</h2>
+
+                <div class="mb-3">
+                    <label asp-for="AppointmentDate" class="form-label">Date</label>
+                    <input asp-for="AppointmentDate" type="date" class="form-control"
+                           min="@today" />
+                    <span asp-validation-for="AppointmentDate" class="text-danger small"></span>
+                </div>
+
+                <label class="form-label">Time</label>
+                <div class="choice-grid">
+                    @foreach (var slot in WorkingHours.Slots)
+                    {
+                        var slotId = "time-" + slot.Replace(":", "");
+                        <div class="choice">
+                            <input type="radio" asp-for="AppointmentTime" value="@slot" id="@slotId" />
+                            <label for="@slotId">@slot</label>
+                        </div>
+                    }
+                </div>
+                <span asp-validation-for="AppointmentTime" class="text-danger small"></span>
+                <p class="text-muted small mt-2 mb-0">Sessions are one hour long. The centre is open @WorkingHours.Slots.First() to @closing.</p>
+            </div>
+        </div>
+
+        @* ---------- Step 2: what is on your mind ---------- *@
+        <div class="col-lg-6">
+            <div class="card-a">
+                <h2>2. What would you like to talk about?</h2>
+
+                <div class="mb-3">
+                    <label asp-for="ProblemCategory" class="form-label">Topic</label>
+                    <select asp-for="ProblemCategory" class="form-select">
+                        <option value="">Choose a topic…</option>
+                        @foreach (var c in BookSessionViewModel.Categories)
+                        {
+                            <option value="@c">@c</option>
+                        }
+                    </select>
+                    <span asp-validation-for="ProblemCategory" class="text-danger small"></span>
+                </div>
+
+                <label class="form-label">How urgent is it?</label>
+                <div class="choice-grid mb-3">
+                    @foreach (var u in BookSessionViewModel.UrgencyLevels)
+                    {
+                        var urgId = "urg-" + u;
+                        <div class="choice">
+                            <input type="radio" name="Urgency" value="@u" id="@urgId" checked="@(Model.Urgency == u)" />
+                            <label for="@urgId">@u</label>
+                        </div>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Mood" class="form-label">How are you feeling? <span class="text-muted fw-normal">(optional)</span></label>
+                    <select asp-for="Mood" class="form-select">
+                        <option value="">Prefer not to say</option>
+                        @foreach (var m in BookSessionViewModel.Moods)
+                        {
+                            <option value="@m">@m</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-0">
+                    <label asp-for="Description" class="form-label">Anything else we should know? <span class="text-muted fw-normal">(optional)</span></label>
+                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ---------- Details from the profile (read only) + submit ---------- *@
+    <div class="card-a mt-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <strong>@Model.StudentName</strong>
+                <div class="text-muted small">
+                    @(string.IsNullOrEmpty(Model.StudentNumber) ? "No student number" : Model.StudentNumber)
+                    @(string.IsNullOrEmpty(Model.Course) ? "" : " · " + Model.Course)
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-area="Student" asp-controller="Dashboard" asp-action="Index" class="btn-ghost">Cancel</a>
+                <button type="submit" class="btn-ancora">Send request</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

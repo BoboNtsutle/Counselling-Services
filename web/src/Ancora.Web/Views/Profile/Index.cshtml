@@ -1,0 +1,59 @@
+@model Profile?
+@{ ViewData["Title"] = "My profile"; }
+@* MODULE 1 — My profile *@
+<div class="page-head">
+    <div><h1>My profile</h1><p>Your details as stored in Supabase.</p></div>
+</div>
+@if (Model != null)
+{
+    <div class="card-a">
+        <dl class="dl-a">
+            <dt>Name</dt><dd>@Model.DisplayName</dd>
+            <dt>Email</dt><dd>@Model.Email</dd>
+            <dt>Role</dt><dd style="text-transform:capitalize">@Model.Role</dd>
+            <dt>Phone</dt><dd>@(string.IsNullOrEmpty(Model.PhoneNumber) ? "—" : Model.PhoneNumber)</dd>
+        </dl>
+    </div>
+}
+<div class="card-a">
+    <h2>Edit profile</h2>
+    <p class="sub">Update your display name, phone and bio.</p>
+    <form asp-action="Edit" method="post">
+        <div class="mb-3">
+            <label class="form-label">Display name</label>
+            <input name="displayName" value="@Model.DisplayName" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Phone number</label>
+            <input name="phoneNumber" value="@Model.PhoneNumber" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Bio</label>
+            <textarea name="bio" class="form-control" rows="3">@Model.Bio</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Save profile</button>
+    </form>
+</div>
+
+@* Upcoming appointments moved to the student dashboard. Removed from profile page per UX request. *@
+
+@if (ViewBag.History is List<Ancora.Web.Models.Appointment> history && history.Count > 0)
+{
+    <div class="card-a">
+        <h2>Appointment history</h2>
+        <table class="table">
+            <thead><tr><th>Date</th><th>Time</th><th>Psychologist</th><th>Status</th></tr></thead>
+            <tbody>
+            @foreach (var a in history)
+            {
+                <tr>
+                    <td>@a.AppointmentDate</td>
+                    <td>@a.AppointmentTime</td>
+                    <td>@a.PsychologistName</td>
+                    <td><partial name="_StatusBadge" model="a.Status" /></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

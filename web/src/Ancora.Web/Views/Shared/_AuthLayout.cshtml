@@ -1,0 +1,39 @@
+@using Ancora.Web.Services.Supabase
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · Ancora Counselling Services</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="icon" type="image/svg+xml" href="~/images/ancora-mark.svg" />
+    <link rel="icon" href="~/favicon.ico" sizes="any" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<div class="auth">
+    <section class="auth-art">
+        <div class="brand-logo brand-logo-lg">
+            <img src="~/images/ancora-logo.svg" alt="Ancora Counselling Services" />
+        </div>
+        <div>
+            <h1>Supporting wellness. Empowering students.</h1>
+            <p>Staff portal for the CUT Wellness Centre — manage appointment requests, sessions, records and announcements in one place.</p>
+        </div>
+        <p style="font-size:13px">Students: book sessions in the Ancora mobile app.</p>
+    </section>
+    <section class="auth-form">
+        <div class="auth-card">
+            @if (TempData[Flash.Success] is string ok)
+            {
+                <div class="flash flash-ok" role="status">@ok</div>
+            }
+            @RenderBody()
+        </div>
+    </section>
+</div>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,36 @@
+@{ ViewData["Title"] = "New announcement"; }
+@* MODULE 4 — Publish an announcement *@
+<div class="page-head">
+    <div><h1>New announcement</h1><p>Programmes and events — students see these in the mobile app.</p></div>
+    <a asp-action="Index" class="btn-ghost">← All announcements</a>
+</div>
+
+<div class="card-a">
+    <h2>Publish announcement</h2>
+    <form asp-area="Admin" asp-controller="Announcements" asp-action="Create" method="post" enctype="multipart/form-data" id="publishForm">
+        <div class="mb-2">
+            <label class="form-label" for="Title">Title</label>
+            <input id="Title" name="Title" class="form-control" required />
+        </div>
+        <div class="mb-2">
+            <label class="form-label" for="Message">Message</label>
+            <textarea id="Message" name="Message" class="form-control" rows="5" required></textarea>
+        </div>
+        <div class="mb-2">
+            <label class="form-label" for="MediaFile">Image or video (optional)</label>
+            <input id="MediaFile" type="file" name="MediaFile" accept="image/*,video/*" class="form-control" />
+        </div>
+        <button class="btn-ancora" type="submit">Publish</button>
+        <a asp-action="Index" class="btn-ghost">Cancel</a>
+        <div id="publishSkeleton" class="mt-3" style="display:none;">
+            <div class="d-flex gap-3">
+                <div class="skeleton thumb"></div>
+                <div style="flex:1">
+                    <div class="skeleton title"></div>
+                    <div class="skeleton line"></div>
+                    <div class="skeleton line" style="width:80%"></div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

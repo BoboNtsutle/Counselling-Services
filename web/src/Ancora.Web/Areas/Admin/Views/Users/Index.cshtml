@@ -1,0 +1,55 @@
+@model List<Profile>
+@{
+    ViewData["Title"] = "Users & records";
+    var psychologists = (List<Profile>)ViewBag.Psychologists;
+}
+@* MODULE 3 — Users, role requests & student records *@
+<div class="page-head">
+    <div><h1>Users &amp; records</h1><p>Staff access requests, psychologists and student records.</p></div>
+    <a asp-controller="Students" asp-action="Index" class="btn-ancora">Student records</a>
+</div>
+
+<div class="card-a">
+    <h2>Staff access requests</h2>
+    @if (Model.Count == 0)
+    {
+        <div class="empty">No one is waiting for approval.</div>
+    }
+    else
+    {
+        <div class="table-wrap">
+        <table class="table-a">
+            <thead><tr><th>Name</th><th>Email</th><th>Asked to be</th><th>Since</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td><strong>@p.DisplayName</strong></td>
+                    <td>@p.Email</td>
+                    <td style="text-transform:capitalize">@p.RequestedRole</td>
+                    <td>@p.CreatedAt.LocalDateTime.ToString("d MMM yyyy")</td>
+                    <td class="text-end text-muted small">approve / reject — TODO</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+    }
+</div>
+
+<div class="card-a">
+    <h2>Psychologists (@psychologists.Count)</h2>
+    <div class="table-wrap">
+    <table class="table-a">
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Bio</th></tr></thead>
+        <tbody>
+        @foreach (var p in psychologists)
+        {
+            <tr><td>@p.DisplayName</td><td>@p.Email</td><td>@p.PhoneNumber</td><td>@p.Bio</td></tr>
+        }
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<!-- Admin TODOs removed from UI: approve/reject and student search to be implemented in controller/actions -->

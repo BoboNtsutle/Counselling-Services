@@ -1,0 +1,75 @@
+@model StudentListViewModel
+@{
+    // Shared by the Admin and Psychologist areas. Links stay inside whichever area you are in.
+    ViewData["Title"] = "Student records";
+    var searching = !string.IsNullOrWhiteSpace(Model.Query);
+}
+
+<div class="page-head">
+    <div><h1>Student records</h1><p>Every student in the centre's system. Find a student by name or student number.</p></div>
+</div>
+
+<div class="card-a">
+    <form method="get" asp-action="Index" class="record-search mb-3">
+        <select name="by" class="form-select" aria-label="Search by">
+            <option value="any" selected="@(Model.SearchBy == StudentSearchBy.Any)">Name or student number</option>
+            <option value="name" selected="@(Model.SearchBy == StudentSearchBy.Name)">Student name</option>
+            <option value="number" selected="@(Model.SearchBy == StudentSearchBy.Number)">Student number</option>
+        </select>
+        <input type="text" name="q" value="@Model.Query" class="form-control" placeholder="Type a name or a student number…" autofocus />
+        <button type="submit" class="btn-ancora">Search</button>
+        @if (searching)
+        {
+            <a asp-action="Index" class="btn-ghost">Clear</a>
+        }
+    </form>
+
+    @if (Model.RecordsTableMissing)
+    {
+        <div class="flash flash-err">
+            The saved-records table is not set up yet, so record counts show as 0 and new entries cannot be saved.
+            Run <code>supabase/student_records.sql</code> once in the Supabase SQL Editor.
+        </div>
+    }
+
+    @if (Model.Students.Count == 0)
+    {
+        <div class="empty">
+            @if (searching) { <text>No student matches “@Model.Query”. Try part of the name or the student number.</text> }
+            else { <text>No students have registered or booked a session yet.</text> }
+        </div>
+    }
+    else
+    {
+        <div class="table-wrap">
+        <table class="table-a">
+            <thead><tr><th>Name</th><th>Student number</th><th>Course</th><th>Contact</th><th class="text-center">Sessions</th><th class="text-center">Saved records</th><th>Last session</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var s in Model.Students)
+            {
+                <tr>
+                    <td>
+                        <strong>@(string.IsNullOrWhiteSpace(s.DisplayName) ? "(no name)" : s.DisplayName)</strong>
+                        @if (!s.HasProfile) { <br /><span class="text-muted small">No student profile yet</span> }
+                    </td>
+                    <td>@(string.IsNullOrEmpty(s.StudentNumber) ? "—" : s.StudentNumber)</td>
+                    <td>@(string.IsNullOrEmpty(s.Course) ? "—" : s.Course)</td>
+                    <td>
+                        @(string.IsNullOrEmpty(s.Email) ? "—" : s.Email)
+                        @if (!string.IsNullOrEmpty(s.PhoneNumber)) { <br /><span class="text-muted small">@s.PhoneNumber</span> }
+                    </td>
+                    <td class="text-center">@s.AppointmentCount</td>
+                    <td class="text-center">@s.RecordCount</td>
+                    <td>@(string.IsNullOrEmpty(s.LastSession) ? "—" : s.LastSession)</td>
+                    <td class="text-end"><a asp-action="Details" asp-route-id="@s.Id">Open record</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+        <p class="text-muted small mt-3 mb-0">
+            @if (searching) { <text>Showing @Model.Students.Count of @Model.TotalStudents students.</text> }
+            else { <text>Showing all @Model.TotalStudents student@(Model.TotalStudents == 1 ? "" : "s").</text> }
+        </p>
+    }
+</div>

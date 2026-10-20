@@ -1,0 +1,55 @@
+@model List<Appointment>
+@{ ViewData["Title"] = "My appointments"; }
+@* MODULE 5 — Psychologist dashboard *@
+<div class="page-head">
+    <div><h1>My appointments</h1><p>Sessions the Wellness Centre has assigned to you.</p></div>
+    <a asp-controller="Students" asp-action="Index" class="btn-ancora">All student records</a>
+</div>
+
+<div class="card-a mb-3">
+    <h2>Find a student record</h2>
+    <form method="get" asp-controller="Students" asp-action="Index" class="record-search">
+        <select name="by" class="form-select" aria-label="Search by">
+            <option value="any">Name or student number</option>
+            <option value="name">Student name</option>
+            <option value="number">Student number</option>
+        </select>
+        <input type="text" name="q" class="form-control" placeholder="Type a name or a student number…" />
+        <button type="submit" class="btn-ancora">Search</button>
+    </form>
+</div>
+
+<div class="stats">
+    <div class="stat accent"><div class="label">Approved</div><div class="value">@Model.Count(a => a.Status == AppointmentStatus.Approved)</div></div>
+    <div class="stat"><div class="label">Completed</div><div class="value">@Model.Count(a => a.Status == AppointmentStatus.Complete)</div></div>
+    <div class="stat"><div class="label">Urgent</div><div class="value">@Model.Count(a => a.Urgency == Urgency.Urgent && a.Status != AppointmentStatus.Complete)</div></div>
+</div>
+
+<div class="card-a">
+    @if (Model.Count == 0)
+    {
+        <div class="empty">No appointments have been assigned to you yet.</div>
+    }
+    else
+    {
+        <div class="table-wrap">
+        <table class="table-a">
+            <thead><tr><th>Student</th><th>Date &amp; time</th><th>Reason</th><th>Mood</th><th>Urgency</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td><a asp-controller="Students" asp-action="Details" asp-route-id="@a.StudentId"><strong>@a.StudentName</strong></a><br /><span class="text-muted small">@a.StudentNumber</span></td>
+                    <td>@a.AppointmentDate<br /><span class="text-muted small">@a.AppointmentTime</span></td>
+                    <td>@a.Reason</td>
+                    <td>@a.Mood</td>
+                    <td><span class="badge-a badge-@a.Urgency">@a.Urgency</span></td>
+                    <td><partial name="_StatusBadge" model="a.Status" /></td>
+                    <td class="text-end"><a asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id">Open</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+    }
+</div>
