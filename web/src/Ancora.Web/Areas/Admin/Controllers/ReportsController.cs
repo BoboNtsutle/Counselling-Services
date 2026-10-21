@@ -16,10 +16,10 @@ public class ReportsController : Controller
 
     public async Task<IActionResult> Index(DateTime? from, DateTime? to)
     {
+        // Dates typed the wrong way round still mean "between these two days".
+        if (from > to) (from, to) = (to, from);
         var stats = await _service.GetStatisticsAsync(from, to);
-        ViewBag.Statistics = stats;
-        ViewData["Title"] = "Statistics";
-        return View();
+        return View(stats);
     }
 
     [HttpGet]
