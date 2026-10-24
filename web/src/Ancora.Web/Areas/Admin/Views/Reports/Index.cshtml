@@ -1,8 +1,150 @@
-@{ ViewData["Title"] = "Statistics"; }
-@* MODULE 6 — Statistics & reports (FR-11) *@
+@model StatisticsReport
+@{
+    ViewData["Title"] = "Statistics";
+    var filtered = Model.From.HasValue || Model.To.HasValue;
+    var period = (Model.From, Model.To) switch
+    {
+        ({ } f, { } t) => $"{f:d MMM yyyy} – {t:d MMM yyyy}",
+        ({ } f, null) => $"from {f:d MMM yyyy}",
+        (null, { } t) => $"up to {t:d MMM yyyy}",
+        _ => "all time",
+    };
+}
+@* MODULE 6 — Statistics & reports (FR-11). Non-graphical on purpose (SRS: graphs are "Won't have"). *@
 <div class="page-head">
-    <div><h1>Statistics</h1><p>Automatic counts — replaces the manual Excel capture.</p></div>
+    <div><h1>Statistics</h1><p>Automatic counts — replaces the manual Excel capture. Showing @period.</p></div>
+    <form method="get" asp-action="Index" class="d-flex gap-2 align-items-end flex-wrap">
+        <div>
+            <label class="form-label" for="from">From</label>
+            <input class="form-control" type="date" id="from" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div>
+            <label class="form-label" for="to">To</label>
+            <input class="form-control" type="date" id="to" name="to" value="@Model.To?.ToString("yyyy-MM-dd")" />
+        </div>
+        <button type="submit" class="btn-ancora">Apply</button>
+        @if (filtered)
+        {
+            <a asp-action="Index" class="btn-ghost">Clear</a>
+        }
+    </form>
 </div>
-<div class="card-a">
-    <!-- Reports TODO removed from UI; implement filters and tables in ReportService -->
+
+<div class="stats">
+    <div class="stat accent"><div class="label">Total appointments</div><div class="value">@Model.Total</div></div>
+    @foreach (var s in Model.ByStatus)
+    {
+        var label = s.Label == AppointmentStatus.Complete ? "Completed" : s.Label;
+        <div class="stat">
+            <div class="label">@label</div>
+            <div class="value @(s.Count == 0 ? "todo" : "")">@s.Count</div>
+        </div>
+    }
 </div>
+
+<div class="stats">
+    @foreach (var u in Model.ByUrgency)
+    {
+        <div class="stat @(u.Label == Urgency.Urgent ? "accent" : "")">
+            <div class="label">@u.Label urgency</div>
+            <div class="value @(u.Count == 0 ? "todo" : "")">@u.Count</div>
+        </div>
+    }
+</div>
+
+@if (Model.Total == 0)
+{
+    <div class="card-a">
+        <div class="empty">No appointments @(filtered ? "in this period" : "yet").</div>
+    </div>
+}
+else
+{
+    <div class="card-a">
+        <h2>Most common reasons for visit</h2>
+        <div class="table-wrap">
+        <table class="table-a">
+            <thead><tr><th>#</th><th>Reason</th><th class="text-end">Appointments</th><th class="text-end">Share</th></tr></thead>
+            <tbody>
+            @for (var i = 0; i < Model.TopReasons.Count; i++)
+            {
+                var r = Model.TopReasons[i];
+                <tr>
+                    <td class="text-muted">@(i + 1)</td>
+                    <td>@r.Label</td>
+                    <td class="text-end"><strong>@r.Count</strong></td>
+                    <td class="text-end text-muted">@Model.Percent(r.Count)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="card-a">
+        <h2>By status and urgency</h2>
+        <div class="table-wrap">
+        <table class="table-a">
+            <thead><tr><th>Status</th><th class="text-end">Appointments</th><th class="text-end">Share</th></tr></thead>
+            <tbody>
+            @foreach (var s in Model.ByStatus)
+            {
+                <tr>
+                    <td><partial name="_StatusBadge" model="s.Label" /></td>
+                    <td class="text-end"><strong>@s.Count</strong></td>
+                    <td class="text-end text-muted">@Model.Percent(s.Count)</td>
+                </tr>
+            }
+            </tbody>
+            <thead><tr><th>Urgency</th><th class="text-end">Appointments</th><th class="text-end">Share</th></tr></thead>
+            <tbody>
+            @foreach (var u in Model.ByUrgency)
+            {
+                <tr>
+                    <td><span class="badge-a badge-@u.Label">@u.Label</span></td>
+                    <td class="text-end"><strong>@u.Count</strong></td>
+                    <td class="text-end text-muted">@Model.Percent(u.Count)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="card-a">
+        <h2>By psychologist</h2>
+        <div class="table-wrap">
+        <table class="table-a">
+            <thead><tr><th>Psychologist</th><th class="text-end">Appointments</th><th class="text-end">Share</th></tr></thead>
+            <tbody>
+            @foreach (var p in Model.ByPsychologist)
+            {
+                <tr>
+                    <td>@p.Label</td>
+                    <td class="text-end"><strong>@p.Count</strong></td>
+                    <td class="text-end text-muted">@Model.Percent(p.Count)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="card-a">
+        <h2>Requests per month</h2>
+        <div class="table-wrap">
+        <table class="table-a">
+            <thead><tr><th>Month</th><th class="text-end">Appointments</th></tr></thead>
+            <tbody>
+            @foreach (var m in Model.ByMonth)
+            {
+                <tr>
+                    <td>@m.Label</td>
+                    <td class="text-end"><strong>@m.Count</strong></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+    </div>
+}
